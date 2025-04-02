@@ -56,11 +56,17 @@ JSON 외에는 아무것도 출력하지 마세요.
 
 
 # ✅ 최신 방식으로 GPT 호출 (openai>=1.0.0)
+#response = openai.chat.completions.create(
+#    model="gpt-4",
+#    messages=[{"role": "user", "content": prompt}],
+#    temperature=0.9,
+#    max_tokens=700
+#)
 response = openai.chat.completions.create(
-    model="gpt-4",
+    model="gpt-3.5-turbo",
     messages=[{"role": "user", "content": prompt}],
-    temperature=0.9,
-    max_tokens=700
+    temperature=0.95,
+    max_tokens=800
 )
 
 # ✂️ 응답 파싱
