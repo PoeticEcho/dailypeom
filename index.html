@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>감성 타이핑 시집</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&family=Gowun+Batang&family=Gamja+Flower&family=Noto+Serif+KR&family=Song+Myung&family=Poor+Story&family=Gowun+Dodum&family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --font-size: 20px;
+    }
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-size: var(--font-size);
+      line-height: 1.8;
+      transition: background 1.2s ease, color 0.8s ease;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #poem {
+      white-space: pre-wrap;
+      max-width: 800px;
+    }
+    #typed {
+      opacity: 1;
+      transition: opacity 0.8s ease-in-out;
+    }
+    #controls {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+    button {
+      margin-left: 0.5rem;
+      font-size: 1rem;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .cursor {
+      display: inline-block;
+      width: 1px;
+      height: 1.2em;
+      background: currentColor;
+      margin-left: 4px;
+      animation: blink 1s step-end infinite;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button onclick="changeFontSize(1)">+</button>
+    <button onclick="changeFontSize(-1)">-</button>
+    <button onclick="reloadPoem()" id="reloadBtn" style="display:none;">🔁 다시 보기</button>
+    <button onclick="toggleAutoPlay()" id="autoplayBtn">▶️ 자동재생</button>
+  </div>
+  <div id="poem">
+    <span id="typed"></span><span id="cursor" class="cursor" style="display:none"></span>
+  </div>
+
+  <script>
+    let reflections;
+    let autoPlayInterval = null;
+    let isAutoPlaying = false;
+    let isTyping = false;
+    let typeTimer = null;
+
+    async function loadReflections() {
+      const res = await fetch('reflections.json');
+      reflections = await res.json();
+      showRandomPoem();
+    }
+
+    function showRandomPoem() {
+      if (isTyping) return;
+
+      const random = reflections[Math.floor(Math.random() * reflections.length)];
+      const textTarget = document.getElementById("typed");
+      const cursor = document.getElementById("cursor");
+      const reloadBtn = document.getElementById("reloadBtn");
+
+      textTarget.style.opacity = 0;
+      isTyping = true;
+
+      setTimeout(() => {
+        document.body.style.background = random.style.background;
+        document.body.style.color = random.style.color;
+        document.body.style.fontFamily = random.style.fontFamily;
+
+        textTarget.textContent = "";
+        cursor.style.display = "none";
+        reloadBtn.style.display = "none";
+
+        let i = 0;
+        function typeChar() {
+          if (i < random.text.length) {
+            textTarget.textContent += random.text.charAt(i);
+            i++;
+            typeTimer = setTimeout(typeChar, 45);
+          } else {
+            cursor.style.display = "inline-block";
+            reloadBtn.style.display = "inline-block";
+            isTyping = false;
+          }
+        }
+
+        if (typeTimer) clearTimeout(typeTimer);
+        typeChar();
+
+        textTarget.style.opacity = 1;
+      }, 500);
+    }
+
+    function reloadPoem() {
+      if (!isTyping) showRandomPoem();
+    }
+
+    function toggleAutoPlay() {
+      const btn = document.getElementById("autoplayBtn");
+      if (!isAutoPlaying) {
+        autoPlayInterval = setInterval(() => {
+          if (!isTyping) showRandomPoem();
+        }, 20000);
+        btn.textContent = "⏸️ 자동정지";
+        isAutoPlaying = true;
+      } else {
+        clearInterval(autoPlayInterval);
+        autoPlayInterval = null;
+        btn.textContent = "▶️ 자동재생";
+        isAutoPlaying = false;
+      }
+    }
+
+    function changeFontSize(delta) {
+      const current = parseInt(getComputedStyle(document.body).getPropertyValue('--font-size'));
+      document.documentElement.style.setProperty('--font-size', `${current + delta}px`);
+    }
+
+    loadReflections();
+  </script>
+</body>
+</html>
